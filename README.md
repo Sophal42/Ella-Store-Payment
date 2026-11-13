@@ -8,3 +8,10 @@ py -m venv .venv
 ```
 
 `FLASK_DEBUG=1` enables auto-reload, `PORT` changes the port, `TOPUP_DB` changes the SQLite file (default `instance/topup.db`).
+
+## Admin panel
+
+```powershell
+.\.venv\Scripts\flask --app ellastore init-admin          # set username/password (writes instance/config.py)
+.\.venv\Scripts\flask --app ellastore seed-demo --count 90 # optional: fake orders for development
+```
