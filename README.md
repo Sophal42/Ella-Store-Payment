@@ -50,3 +50,26 @@ ellastore/
     js/pages/                home.js, topup.js
 tests/                       pytest: pages + API
 ```
+## Components
+
+Jinja macros (`templates/components/`), import with `{% from "components/cards.html" import game_card %}`:
+
+| File | Macros |
+|---|---|
+| `icons.html` | `icon(name, cls)`, `product_icon(kind, color)` |
+| `ui.html` | `pill`, `section_head` (call-block for right side), `card` (call-block), `step_heading`, `empty_state`, `text_input`, `payment_badges`, `khmer_flag`, `game_logo`, `game_art` |
+| `cards.html` | `game_card`, `feature_card`, `product_card`, `payment_option` |
+| `carousel.html` | `carousel(slides, interval)` |
+| `topup.html` | `game_hero`, `player_status`, `coupon_field`, `pay_bar`, `mascot` |
+
+JS components (`static/js/components/`) attach behaviour to the markup those macros render:
+
+| Module | Pairs with |
+|---|---|
+| `carousel.js` → `initCarousel(el)` | `carousel()` |
+| `choice-group.js` → `createChoiceGroup(el, {initial, onChange})` | any group of `product_card` / `payment_option` |
+| `player-check.js` → `createPlayerCheck(el, getPayload)` | `player_status()` |
+| `coupon-field.js` → `createCouponField(el, onChange)` | `coupon_field()` |
+| `favorites.js`, `subscribe.js`, `header.js`, `toast.js` | game cards, footer form, header, `#toast` |
+
+Selection and status states are expressed with `aria-pressed` / `data-state` attributes and styled in `style.css`, so the JS only flips attributes.
