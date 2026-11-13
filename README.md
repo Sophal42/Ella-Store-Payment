@@ -73,3 +73,21 @@ JS components (`static/js/components/`) attach behaviour to the markup those mac
 | `favorites.js`, `subscribe.js`, `header.js`, `toast.js` | game cards, footer form, header, `#toast` |
 
 Selection and status states are expressed with `aria-pressed` / `data-state` attributes and styled in `style.css`, so the JS only flips attributes.
+
+## Adding a game
+
+Add a `Game(...)` to `GAMES` in `ellastore/catalog.py`. It appears automatically on the home grid, the menu, `/game/<id>`, and the API.
+
+## API
+
+| Method | Path | Body |
+|---|---|---|
+| GET | `/api/games`, `/api/games/<id>` | |
+| POST | `/api/player/check` | `{game_id, uid, server}` |
+| POST | `/api/coupon` | `{code}` |
+| POST | `/api/orders` | `{game_id, uid, server, item, pay, coupon}` |
+| GET | `/api/orders/<id>` | |
+| POST | `/api/subscribe` | `{email}` |
+
+Prices and discounts are computed on the server; the client total is never trusted.
+The player lookup is still a mock (`services/players.py:lookup_name`) and no payment gateway is connected; orders are saved with status `pending_payment`.
