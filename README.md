@@ -20,20 +20,28 @@ To change it, run `init-admin` and restart the server.
 
 ## Frontend
 
-The frontend was removed so it can be rebuilt from scratch. What is left:
+Server-rendered Jinja templates with plain CSS and one JS module - no build step, no CDN framework.
 
 | File | Purpose |
 |---|---|
-| `ellastore/templates/stub.html` | plain placeholder page every HTML route renders |
-| `ellastore/templates/admin/login.html` | minimal working admin sign-in form |
+| `templates/base.html` | store layout: header, search, game menu, footer, toast |
+| `templates/pages/home.html` | hero + game grid; search is server-side via `?q=` |
+| `templates/pages/topup.html` | player check, product picker, payment method, coupon, totals |
+| `templates/pages/404.html` | not-found page |
+| `templates/admin/base.html` | admin shell with sidebar, flashes and logout |
+| `templates/admin/components.html` | macros: `status_badge`, `orders_table`, `pagination` |
+| `templates/admin/dashboard.html` | KPI tiles, 14-day revenue chart, top games, recent orders |
+| `templates/admin/orders.html` | status tabs, filters, paged table |
+| `templates/admin/order_detail.html` | order facts, totals, status form |
+| `templates/admin/subscribers.html` | newsletter list + CSV export |
+| `templates/admin/games.html` | catalog table with per-game revenue |
+| `templates/admin/login.html` | admin sign-in |
+| `static/css/style.css` | storefront styles |
+| `static/css/admin.css` | admin styles |
+| `static/js/app.js` | player check, coupon, live totals, order creation, subscribe |
 
-There is no `static/` folder any more - add `ellastore/static/` back when you build the new UI.
-Page routes (`ellastore/routes/pages.py`) and the admin views (`ellastore/admin/views.py`)
-call `render_template("stub.html", ...)` with a `title`, `message` and optional `data`;
-replace those calls with your own templates.
-
-The JSON API, the service layer, the database and the admin report queries are unchanged,
-so you can drive the backend from the API while you rebuild the pages.
+Selection state is expressed with `:has(input:checked)` and `data-state` attributes, so the JS only
+calls the API and updates text/classes. The browser total is cosmetic - the server recomputes it.
 
 ## Structure
 
@@ -51,18 +59,17 @@ ellastore/
     api.py                   JSON API:    /api/...
   admin/                     admin blueprint (/admin): auth.py (login, CSRF), views.py
   cli.py                     init-admin, seed-demo
-  templates/
-    stub.html                placeholder page
-    admin/login.html         admin sign-in
+  templates/                 store and admin templates (see above)
+  static/                    css + js
 tests/                       pytest: pages + API
 ```
 
-`content.py` still holds the old banner/feature/payment copy, ready to reuse.
+`content.py` still holds the old banner/feature/payment copy if you want to reuse it.
 
 ## Adding a game
 
-Add a `Game(...)` to `GAMES` in `ellastore/catalog.py`. It appears automatically in the menu data,
-`/game/<id>`, and the API.
+Add a `Game(...)` to `GAMES` in `ellastore/catalog.py`. It appears automatically in the menu,
+the home grid, `/game/<id>`, and the API.
 
 ## API
 
