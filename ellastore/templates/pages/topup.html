@@ -76,5 +76,25 @@
       <p class="fineprint">By paying you agree to the store terms. The payment gateway is not connected yet.</p>
     </aside>
   </div>
+
+  <section class="card receipt" data-receipt hidden>
+    <p class="receipt-icon" aria-hidden="true">&#10003;</p>
+    <h1 class="receipt-title" tabindex="-1">Order created</h1>
+    <p class="receipt-sub">Keep this order number in case you need support.</p>
+
+    <dl>
+      <div><dt>Order</dt><dd class="mono" data-receipt-id></dd></div>
+      <div><dt>Product</dt><dd data-receipt-item></dd></div>
+      <div><dt>Total</dt><dd data-receipt-total></dd></div>
+      <div><dt>Status</dt><dd data-receipt-status></dd></div>
+    </dl>
+
+    <p class="fineprint">The payment gateway is not connected yet, so this order is saved as pending payment.</p>
+
+    <div class="receipt-actions">
+      <button type="button" class="btn ghost" data-new-order>Top up again</button>
+      <a class="btn primary" href="{{ url_for('pages.home') }}">Back to games</a>
+    </div>
+  </section>
 </div>
 {% endblock %}

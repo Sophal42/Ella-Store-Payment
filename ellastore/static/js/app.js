@@ -54,6 +54,8 @@ function initTopup(root) {
   const couponInput = $('#coupon', root);
   const couponMsg = $('[data-coupon-msg]', root);
   const payButton = $('[data-pay]', root);
+  const grid = $('.topup-grid', root);
+  const receipt = $('[data-receipt]', root);
 
   let verified = false;
   let discount = 0;
@@ -88,6 +90,43 @@ function initTopup(root) {
   function invalidatePlayer() {
     verified = false;
     setStatus('Not checked yet.');
+  }
+
+  /** Swap the form for the receipt panel. Returns false if the page has no panel. */
+  function showReceipt(order) {
+    if (!receipt) return false;
+
+    $('[data-receipt-id]', receipt).textContent = '#' + order.id;
+    $('[data-receipt-item]', receipt).textContent = order.item;
+    $('[data-receipt-total]', receipt).textContent = money(order.total);
+    $('[data-receipt-status]', receipt).textContent = order.status.replace(/_/g, ' ');
+
+    if (grid) grid.hidden = true;
+    receipt.hidden = false;
+    receipt.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('.receipt-title', receipt)?.focus();
+    return true;
+  }
+
+  /** Bring the empty form back for a second order on the same game. */
+  function resetForm() {
+    if (grid) grid.hidden = false;
+    receipt.hidden = true;
+    payButton.disabled = false;
+
+    $$('input[name="product"]', root).forEach(input => { input.checked = false; });
+    coupon = '';
+    discount = 0;
+    couponInput.value = '';
+    couponMsg.textContent = '';
+    couponMsg.dataset.state = '';
+
+    uid.value = '';
+    if (sid) sid.value = '';
+
+    invalidatePlayer();
+    renderTotals();
+    uid.focus();
   }
 
   [uid, sid].filter(Boolean).forEach(input => {
@@ -178,14 +217,23 @@ function initTopup(root) {
       pay: ($('input[name="pay"]:checked', root) || {}).value || 'khqr',
       coupon: coupon || null,
     });
-    payButton.disabled = false;
 
     if (res.ok) {
-      toast(`Order #${res.order.id} created - ${res.order.item}, ${money(res.order.total)}. Payment gateway is not connected yet.`, 5000);
-    } else {
-      toast(res.error);
+      // The button stays disabled behind the receipt, so the same order cannot be sent twice.
+      if (!showReceipt(res.order)) {
+        payButton.disabled = false;
+        toast(`Order #${res.order.id} created - ${money(res.order.total)}`, 5000);
+      }
+      return;
     }
+
+    payButton.disabled = false;
+    toast(res.error);
   });
+
+  if (receipt) {
+    $('[data-new-order]', receipt)?.addEventListener('click', resetForm);
+  }
 
   renderTotals();
 }
