@@ -125,7 +125,16 @@ function initTopup(root) {
   $('[data-apply]', root).addEventListener('click', async () => {
     const code = couponInput.value.trim();
     if (!code) {
-      toast('Enter a coupon code');
+      // Empty box + a coupon already applied = remove it.
+      if (!coupon) {
+        toast('Enter a coupon code');
+        return;
+      }
+      coupon = '';
+      discount = 0;
+      couponMsg.textContent = 'Coupon removed';
+      couponMsg.dataset.state = '';
+      renderTotals();
       return;
     }
     const res = await api('/api/coupon', { code });
