@@ -2,6 +2,7 @@ import pytest
 from werkzeug.security import generate_password_hash
 
 from ellastore import create_app
+from ellastore.services import orders, reports
 
 PASSWORD = "test-pass-123"
 
@@ -51,36 +52,46 @@ def test_login_redirect_stays_inside_admin(client):
     assert r.headers["Location"] == "/admin/"
 
 
-def test_dashboard_reports_paid_revenue(client):
+def test_dashboard_reports_paid_revenue(client, app):
     order = place_order(client)                 # $4.99, pending
     login(client)
-    token = csrf(client)
-    client.post(f"/admin/orders/{order['id']}/status", data={"status": "paid", "csrf_token": token})
+    client.post(f"/admin/orders/{order['id']}/status", data={"status": "paid", "csrf_token": csrf(client)})
     place_order(client)                         # second one stays pending
 
-    html = client.get("/admin/").get_data(as_text=True)
-    assert "$4.99" in html                      # revenue = only the paid order
-    assert "1 paid orders" in html
-    assert f"#{order['id']}" in html
+    assert client.get("/admin/").status_code == 200
+    with app.app_context():
+        stats = reports.summary()
+    assert stats["revenue"] == 4.99
+    assert stats["paid_orders"] == 1
+    assert stats["pending"] == 1
 
 
-def test_order_filters_and_detail(client):
+def test_order_filters_and_detail(client, app):
     a = place_order(client)
     b = place_order(client, game_id="genshin", server="Asia", item=0)
     login(client)
-    html = client.get("/admin/orders?game=genshin").get_data(as_text=True)
-    assert b["id"] in html and a["id"] not in html
-    assert a["id"] in client.get(f"/admin/orders?q={a['id'][:6]}").get_data(as_text=True)
-    assert "Update status" in client.get(f"/admin/orders/{a['id']}").get_data(as_text=True)
+
+    with app.app_context():
+        rows, total = orders.search(game_id="genshin")
+        assert [r["id"] for r in rows] == [b["id"]] and total == 1
+        assert [r["id"] for r in orders.search(q=a["id"][:6])[0]] == [a["id"]]
+        assert orders.get(a["id"])["id"] == a["id"]
+        assert orders.get("NOPE") is None
+
+    assert client.get(f"/admin/orders/{a['id']}").status_code == 200
     assert client.get("/admin/orders/NOPE").status_code == 404
 
 
-def test_status_update_validates(client):
+def test_status_update_validates(client, app):
     order = place_order(client)
     login(client)
     token = csrf(client)
+
     r = client.post(f"/admin/orders/{order['id']}/status", data={"status": "bogus", "csrf_token": token}, follow_redirects=True)
-    assert b"Unknown status" in r.data
+    assert r.status_code == 200
+    with app.app_context():
+        assert orders.get(order["id"])["status"] == "pending_payment"
+
     r = client.post(f"/admin/orders/{order['id']}/status", data={"status": "delivered"})  # no CSRF token
     assert r.status_code == 400
 

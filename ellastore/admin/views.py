@@ -79,8 +79,8 @@ def order_detail(order_id):
     order = orders.get(order_id)
     if order is None:
         abort(404)
-    return render_template("admin/order_detail.html", order=order, game=get_game(order["game_id"]),
-                           statuses=orders.STATUSES)
+    return render_template("admin/order_detail.html", order=order,
+                           game=get_game(order["game_id"]), statuses=orders.STATUSES)
 
 
 @bp.post("/orders/<order_id>/status")

@@ -1,50 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}ELLASTORE - Game Top-up{% endblock %}</title>
-
-<!-- Suppress the Tailwind CDN "should not be used in production" console warning -->
-<script>
-  (function () {
-    var w = console.warn;
-    console.warn = function () {
-      var m = arguments[0];
-      if (typeof m === 'string' && m.indexOf('cdn.tailwindcss.com') > -1) return;
-      w.apply(console, arguments);
-    };
-  })();
-</script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Khmer:wght@500;700&display=swap" rel="stylesheet" />
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: { sans: ['Inter', 'Noto Sans Khmer', 'system-ui', 'sans-serif'] },
-        colors: { brand: '#2563EB', ink: '#1f2233', mint: '#dcf8ef', topup: '#6a6fd0' }
-      }
-    }
-  };
-</script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+<body data-page="{% block page_id %}{% endblock %}">
 
-<body class="font-sans text-ink antialiased min-h-screen" data-page="{% block page_id %}{% endblock %}">
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="logo" href="{{ url_for('pages.home') }}">ELLA<span>STORE</span></a>
 
-{% include "partials/header.html" %}
+    <form class="search" action="{{ url_for('pages.home') }}" method="get" role="search">
+      <input id="searchInput" name="q" type="search" value="{{ query or '' }}"
+             placeholder="Search games..." aria-label="Search games">
+    </form>
 
-<div id="toast" role="status" aria-live="polite" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-[60] max-w-[90vw] bg-ink text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg text-center"></div>
+    <nav class="nav" aria-label="Games">
+      {%- for g in nav_games %}
+      <a href="{{ url_for('pages.topup', game_id=g.id) }}"
+         class="{{ 'is-active' if request.view_args and request.view_args.get('game_id') == g.id else '' }}">{{ g.name }}</a>
+      {%- endfor %}
+    </nav>
+  </div>
+</header>
 
-<main class="max-w-6xl mx-auto px-2 sm:px-4 pb-6">
+<main class="wrap">
   {% block content %}{% endblock %}
 </main>
 
-{% block overlay %}{% endblock %}
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <p class="footer-brand">{{ store.name }} &middot; {{ store.tagline }}</p>
+      <p class="footer-note">{{ store.blurb }} Secure payment.<br>&copy; {{ store.year }} {{ store.name }}.</p>
+    </div>
+    <form class="subscribe" data-subscribe>
+      <input name="email" type="email" required placeholder="Enter your email" aria-label="Email">
+      <button type="submit">Subscribe</button>
+    </form>
+  </div>
+</footer>
 
-{% include "partials/footer.html" %}
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-<script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

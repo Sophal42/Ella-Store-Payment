@@ -1,60 +1,80 @@
 {% extends "base.html" %}
-{% from "components/icons.html" import icon %}
-{% from "components/ui.html" import card, step_heading, text_input %}
-{% from "components/cards.html" import product_card, payment_option %}
-{% from "components/topup.html" import game_hero, player_status, coupon_field, pay_bar, mascot %}
-
-{% block title %}{{ game.name }} Top-up - ELLASTORE{% endblock %}
 {% block page_id %}topup{% endblock %}
+{% block title %}{{ game.name }} Top-up - ELLASTORE{% endblock %}
 
 {% block content %}
-<div data-topup data-game-id="{{ game.id }}" data-server-type="{{ game.server or '' }}">
-  <div class="pt-3">
-    <a href="{{ url_for('pages.home') }}" class="inline-flex items-center gap-1 text-[13px] font-bold text-gray-600 bg-white rounded-full pl-2 pr-3.5 py-1.5 card-shadow">{{ icon("back", "w-4 h-4") }} Back</a>
-  </div>
+<div class="topup" data-topup data-game-id="{{ game.id }}" data-server-type="{{ game.server or '' }}">
 
-  {{ game_hero(game) }}
+  <a class="back" href="{{ url_for('pages.home') }}">&larr; All games</a>
 
-  <div class="mt-4 grid lg:grid-cols-5 gap-4 items-start">
-    <div class="lg:col-span-3 space-y-4">
-      {% call card() %}
-        {{ step_heading(1, "ENTER YOUR INFORMATION") }}
-        <div class="mt-3 space-y-2.5">
-          {{ text_input("uid", "Enter Game ID", numeric=True) }}
-          {%- if game.server == "text" %}
-          {{ text_input("sid", "Server / Zone ID", numeric=True) }}
-          {%- elif game.server == "select" %}
-          <select id="srv" class="w-full rounded-xl border border-gray-200 bg-[#f7f7fa] px-4 py-3 text-sm outline-none focus:border-brand">
-            {%- for s in game.servers %}<option>{{ s }}</option>{% endfor %}
-          </select>
-          {%- endif %}
-        </div>
-        {{ player_status() }}
-      {% endcall %}
+  <section class="game-hero" style="background: {{ game.grad }}">
+    <h1>{{ game.name }}</h1>
+    <p>{{ game.unit }} &middot; {{ game.products|length }} options</p>
+  </section>
 
-      {% call card() %}
-        {{ step_heading(2, "CHOOSE PRODUCT") }}
-        <div data-products class="mt-3 grid grid-cols-2 gap-2.5">
-          {%- for p in game.products %}{{ product_card(p, loop.index0, game.color) }}{% endfor %}
-        </div>
-      {% endcall %}
-    </div>
+  <div class="topup-grid">
+    <section class="card">
+      <h2 class="step"><span>1</span> Your account</h2>
 
-    <div class="lg:col-span-2 space-y-4">
-      {% call card() %}
-        {{ step_heading(3, "PAYMENT METHOD") }}
-        <div data-payments class="mt-3 space-y-2.5">
-          {%- for m in payment_methods %}{{ payment_option(m) }}{% endfor %}
-        </div>
-        {{ coupon_field() }}
-        <p class="mt-3 text-[11px] text-gray-500 leading-snug">By clicking Pay Now, you agree to our <span class="text-brand font-semibold">Terms and Conditions</span>.</p>
-      {% endcall %}
-    </div>
+      <label for="uid">Game ID</label>
+      <input id="uid" name="uid" inputmode="numeric" autocomplete="off" placeholder="e.g. 123456789">
+
+      {%- if game.server == 'text' %}
+      <label for="sid">Server / Zone ID</label>
+      <input id="sid" name="sid" inputmode="numeric" autocomplete="off" placeholder="e.g. 1234">
+      {%- elif game.server == 'select' %}
+      <label for="srv">Server</label>
+      <select id="srv" name="srv">
+        {%- for s in game.servers %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+      </select>
+      {%- endif %}
+
+      <button type="button" class="btn ghost" data-check>Check player</button>
+      <p class="player-status" data-player-status>Not checked yet.</p>
+    </section>
+
+    <section class="card">
+      <h2 class="step"><span>2</span> Choose a product</h2>
+      <div class="product-grid">
+        {%- for p in game.products %}
+        <label class="product">
+          <input type="radio" name="product" value="{{ loop.index0 }}"
+                 data-title="{{ p.title }}" data-price="{{ p.price }}">
+          <span class="product-title">{{ p.title }}</span>
+          <span class="product-price">{{ p.price|money }}</span>
+        </label>
+        {%- endfor %}
+      </div>
+    </section>
+
+    <aside class="card summary">
+      <h2 class="step"><span>3</span> Payment</h2>
+
+      <label class="pay">
+        <input type="radio" name="pay" value="khqr" checked>
+        <span><strong>ABA KHQR</strong><small>Scan with any Bakong app</small></span>
+      </label>
+      <label class="pay">
+        <input type="radio" name="pay" value="wallet">
+        <span><strong>Wallet balance</strong><small>Balance: $0.00</small></span>
+      </label>
+
+      <label for="coupon">Coupon</label>
+      <div class="coupon-row">
+        <input id="coupon" autocomplete="off" placeholder="ELLA10">
+        <button type="button" class="btn ghost" data-apply>Apply</button>
+      </div>
+      <p class="coupon-msg" data-coupon-msg></p>
+
+      <dl class="totals">
+        <div><dt>Subtotal</dt><dd data-subtotal>$0.00</dd></div>
+        <div><dt>Discount</dt><dd data-discount>-$0.00</dd></div>
+        <div class="grand"><dt>Total</dt><dd data-total>$0.00</dd></div>
+      </dl>
+
+      <button type="button" class="btn primary" data-pay>Pay now</button>
+      <p class="fineprint">By paying you agree to the store terms. The payment gateway is not connected yet.</p>
+    </aside>
   </div>
 </div>
-{% endblock %}
-
-{% block overlay %}
-{{ mascot() }}
-{{ pay_bar() }}
 {% endblock %}

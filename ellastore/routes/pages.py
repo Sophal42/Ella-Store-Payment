@@ -2,8 +2,7 @@
 
 from flask import Blueprint, abort, jsonify, render_template, request
 
-from .. import content
-from ..catalog import all_games, get_game, search_games
+from ..catalog import all_games, get_game
 
 bp = Blueprint("pages", __name__)
 
@@ -11,14 +10,10 @@ bp = Blueprint("pages", __name__)
 @bp.route("/")
 def home():
     q = request.args.get("q", "").strip()
-    return render_template(
-        "pages/home.html",
-        games=all_games(),
-        match_ids={g.id for g in search_games(q)},
-        query=q,
-        slides=content.SLIDES,
-        features=content.FEATURES,
-    )
+    games = all_games()
+    if q:
+        games = [g for g in games if q.lower() in g.name.lower()]
+    return render_template("pages/home.html", games=games, query=q)
 
 
 @bp.route("/game/<game_id>")
@@ -26,12 +21,7 @@ def topup(game_id):
     game = get_game(game_id)
     if game is None:
         abort(404)
-    return render_template(
-        "pages/topup.html",
-        game=game,
-        payment_methods=content.PAYMENT_METHODS,
-        footer_class="pb-24",  # room for the fixed pay bar
-    )
+    return render_template("pages/topup.html", game=game)
 
 
 @bp.app_errorhandler(404)

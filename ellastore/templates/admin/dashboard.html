@@ -1,31 +1,59 @@
 {% extends "admin/base.html" %}
-{% from "admin/components.html" import stat_tile, panel, revenue_chart, game_bars, orders_table %}
-
+{% from "admin/components.html" import orders_table %}
 {% block title %}Dashboard{% endblock %}
 {% block heading %}Dashboard{% endblock %}
-{% block subheading %}<p class="text-[13px] text-gray-500">Revenue counts paid and delivered orders. Times in UTC.</p>{% endblock %}
+{% block subheading %}<p class="sub">Revenue counts paid and delivered orders. Times in UTC.</p>{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
-  {{ stat_tile("Revenue (all time)", stats.revenue | money, stats.paid_orders ~ " paid orders") }}
-  {{ stat_tile("Avg. order value", stats.avg_order | money) }}
-  {{ stat_tile("Awaiting payment", stats.pending, stats.pending_value | money ~ " outstanding") }}
-  {{ stat_tile("Orders today", stats.today, stats.orders ~ " all time · " ~ stats.subscribers ~ " subscribers") }}
+<div class="tiles">
+  <div class="tile"><p>Revenue (all time)</p><strong>{{ stats.revenue|money }}</strong><small>{{ stats.paid_orders }} paid orders</small></div>
+  <div class="tile"><p>Avg. order value</p><strong>{{ stats.avg_order|money }}</strong></div>
+  <div class="tile"><p>Awaiting payment</p><strong>{{ stats.pending }}</strong><small>{{ stats.pending_value|money }} outstanding</small></div>
+  <div class="tile"><p>Orders today</p><strong>{{ stats.today }}</strong><small>{{ stats.orders }} all time &middot; {{ stats.subscribers }} subscribers</small></div>
 </div>
 
-<div class="mt-4 grid xl:grid-cols-5 gap-4 items-start">
-  {% call panel("Revenue, last 14 days", cls="xl:col-span-3") %}
-    <p class="-mt-1 mb-4 text-[13px] text-gray-500"><span class="font-bold text-ink tabular-nums">{{ daily_total | money }}</span> in the period</p>
-    {{ revenue_chart(daily) }}
-  {% endcall %}
-  {% call panel("Top games by revenue", "All games", url_for('admin.game_list'), cls="xl:col-span-2") %}
-    {{ game_bars(games, limit=6) }}
-  {% endcall %}
+<div class="cols">
+  <section class="card">
+    <header class="card-head">
+      <h2>Revenue, last 14 days</h2>
+      <span class="muted">{{ daily_total|money }} in the period</span>
+    </header>
+    {%- set top = daily|map(attribute='revenue')|max|nice_ceil %}
+    <div class="chart" role="img" aria-label="Paid revenue per day for the last {{ daily|length }} days">
+      {%- for d in daily %}
+      <div class="bar" title="{{ d.date.strftime('%a %d %b') }} · {{ d.revenue|money }} · {{ d.orders }} order{{ 's' if d.orders != 1 }}">
+        <span style="height: {{ (d.revenue / top * 100) if top else 0 }}%"></span>
+      </div>
+      {%- endfor %}
+    </div>
+    <div class="chart-axis">
+      {%- for d in daily %}<span>{% if loop.index0 % 3 == 0 or loop.last %}{{ d.date.strftime('%d %b') }}{% endif %}</span>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <h2>Top games by revenue</h2>
+      <a href="{{ url_for('admin.game_list') }}">All games</a>
+    </header>
+    {%- set game_top = games|map(attribute='revenue')|max if games else 0 %}
+    <ul class="bars">
+      {%- for r in games[:6] %}
+      <li>
+        <span class="bars-label">{{ r.game.name }}</span>
+        <span class="bars-track"><span style="width: {{ (r.revenue / game_top * 100) if game_top else 0 }}%"></span></span>
+        <span class="bars-value">{{ r.revenue|money }}</span>
+      </li>
+      {%- endfor %}
+    </ul>
+  </section>
 </div>
 
-<div class="mt-4">
-  {% call panel("Recent orders", "All orders", url_for('admin.order_list')) %}
-    {{ orders_table(recent, compact=True) }}
-  {% endcall %}
-</div>
+<section class="card">
+  <header class="card-head">
+    <h2>Recent orders</h2>
+    <a href="{{ url_for('admin.order_list') }}">All orders</a>
+  </header>
+  {{ orders_table(recent, compact=True) }}
+</section>
 {% endblock %}

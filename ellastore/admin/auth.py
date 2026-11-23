@@ -62,6 +62,9 @@ def login():
         if user_ok and pass_ok:
             session.clear()
             session["admin"] = username
+            # Rotate the CSRF token on privilege change: session.clear() drops
+            # the pre-login token, and every later form needs a fresh one.
+            session["csrf"] = secrets.token_urlsafe(32)
             session.permanent = True
             return redirect(_safe_next(request.args.get("next")))
         flash("Invalid username or password", "error")

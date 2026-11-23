@@ -1,37 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="robots" content="noindex" />
-<title>Sign in · ELLASTORE Admin</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
-<script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }, colors: { brand: '#2563EB', ink: '#1f2233' } } } };</script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in &middot; ELLASTORE Admin</title>
+<style>
+  body { font: 16px/1.6 system-ui, sans-serif; max-width: 22rem; margin: 5rem auto; padding: 0 1rem; color: #1f2233; }
+  h1 { font-size: 1.4rem; }
+  label { display: block; margin-top: 1rem; font-weight: 600; font-size: .9rem; }
+  input { width: 100%; box-sizing: border-box; padding: .55rem .7rem; margin-top: .3rem; border: 1px solid #d1d5db; border-radius: .5rem; font: inherit; }
+  button { width: 100%; margin-top: 1.4rem; padding: .65rem; border: 0; border-radius: .5rem; background: #2563eb; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  .flash { color: #b91c1c; font-weight: 600; }
+  footer { margin-top: 1.5rem; font-size: .85rem; color: #6b7280; }
+</style>
 </head>
-<body class="font-sans text-ink antialiased bg-[#f5f7fb] min-h-screen flex items-center justify-center px-4">
-{% from "admin/components.html" import flashes %}
-<div class="w-full max-w-sm">
-  <p class="text-center font-extrabold italic text-2xl text-[#1d2b64]">ELLASTORE <span class="not-italic text-sm font-semibold text-gray-500">ADMIN</span></p>
-  <div class="mt-5 bg-white rounded-2xl border border-gray-100 card-shadow p-6">
-    {{ flashes() }}
-    <form method="post" class="space-y-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div>
-        <label for="username" class="text-[13px] font-semibold text-gray-600">Username</label>
-        <input id="username" name="username" autocomplete="username" required autofocus
-          class="mt-1 w-full rounded-xl border border-gray-200 bg-[#f7f7fa] px-4 py-2.5 text-sm outline-none focus:border-brand focus:bg-white" />
-      </div>
-      <div>
-        <label for="password" class="text-[13px] font-semibold text-gray-600">Password</label>
-        <input id="password" name="password" type="password" autocomplete="current-password" required
-          class="mt-1 w-full rounded-xl border border-gray-200 bg-[#f7f7fa] px-4 py-2.5 text-sm outline-none focus:border-brand focus:bg-white" />
-      </div>
-      <button class="w-full rounded-xl bg-brand text-white font-bold py-2.5 hover:bg-blue-700">Sign in</button>
-    </form>
-  </div>
-  <p class="mt-4 text-center text-[13px]"><a href="{{ url_for('pages.home') }}" class="text-gray-500 hover:text-ink">&larr; Back to store</a></p>
-</div>
+<body>
+  <h1>ELLASTORE Admin</h1>
+  {%- for category, message in get_flashed_messages(with_categories=true) %}
+  <p class="flash">{{ message }}</p>
+  {%- endfor %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Username</label>
+    <input id="username" name="username" autocomplete="username" required autofocus>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button>Sign in</button>
+  </form>
+  <footer><a href="/">Back to store</a></footer>
 </body>
 </html>
